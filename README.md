@@ -4,7 +4,7 @@
 
 ```
 ---
-namespace_id: 1
+group_id: 1
 gitlab_url: https://gitlab.com/api/v4
 gitlab_private_token: AABBCCDD
 stop_on_error: true

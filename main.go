@@ -40,7 +40,7 @@ func main() {
 		panic(err)
 	}
 	client := NewClient(cfg.GitLabUrl, cfg.GitLabToken)
-	projects, err := client.GetGroupProjects(cfg.NamespaceID)
+	projects, err := client.GetGroupProjects(cfg.GroupID)
 	if err != nil {
 		panic(err)
 	}

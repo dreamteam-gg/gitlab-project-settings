@@ -11,7 +11,7 @@ type Config struct {
 	GitLabUrl       string                 `yaml:"gitlab_url"`
 	GitLabToken     string                 `yaml:"gitlab_private_token"`
 	StopOnError     bool                   `yaml:"stop_on_error"`
-	NamespaceID     int                    `yaml:"namespace_id"`
+	GroupID         int                    `yaml:"group_id"`
 	Settings        map[string]interface{} `yaml:"settings"`
 	OnlyProject     []string               `yaml:"only_projects"`
 	ExcludeProjects []string               `yaml:"exclude_projects"`
