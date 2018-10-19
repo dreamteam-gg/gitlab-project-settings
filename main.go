@@ -7,6 +7,7 @@ import (
 
 var (
 	flagConfigFile = flag.String("config", "./config.yml", "Path to configuration file")
+	flagDryRun     = flag.Bool("dry-run", false, "Dry run mode")
 	cfg            *Config
 )
 
@@ -57,6 +58,10 @@ func main() {
 			if projVal != cfgVal {
 				fmt.Printf("\t%s = %v (%v)\n", setting, projVal, cfgVal)
 			}
+		}
+		if *flagDryRun {
+			fmt.Println()
+			continue
 		}
 		err = client.UpdateProject(id, cfg.Settings)
 		if err != nil {

@@ -1,5 +1,15 @@
 # GitLab Project Settings
 
+## Usage
+
+```
+Usage of ./gitlab-project-settings:
+  -config string
+    	Path to configuration file (default "./config.yml")
+  -dry-run
+    	Dry run mode
+```
+
 ## Configuration
 
 ```
