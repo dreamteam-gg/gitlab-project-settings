@@ -10,14 +10,24 @@ var (
 	cfg            *Config
 )
 
+func InArray(k string, arr []string) bool {
+	for _, val := range arr {
+		if val == k {
+			return true
+		}
+	}
+	return false
+}
+
 func CanProcessProject(name string) bool {
+	if InArray(name, cfg.ExcludeProjects) {
+		return false
+	}
 	if len(cfg.OnlyProject) == 0 {
 		return true
 	}
-	for _, proj := range cfg.OnlyProject {
-		if proj == name {
-			return true
-		}
+	if InArray(name, cfg.OnlyProject) {
+		return true
 	}
 	return false
 }
