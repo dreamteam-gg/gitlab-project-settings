@@ -9,6 +9,7 @@ gitlab_url: https://gitlab.com/api/v4
 gitlab_private_token: AABBCCDD
 stop_on_error: true
 
+exclude_projects: []
 only_projects: []
 
 settings:
