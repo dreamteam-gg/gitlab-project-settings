@@ -12,6 +12,7 @@ stop_on_error: true
 exclude_projects: []
 only_projects: []
 
+# ref: https://docs.gitlab.com/ee/api/projects.html#edit-project
 settings:
   approvals_before_merge: 2
   disable_overriding_approvers_per_merge_request: true
