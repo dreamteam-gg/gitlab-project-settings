@@ -34,7 +34,7 @@ func (c *Client) getPath(path string) string {
 	if strings.Contains(path, separator) {
 		separator = "&"
 	}
-	return fmt.Sprintf("%s/%s%sprivate_token=%s&per_page=1000", c.baseURL, path, separator, c.token)
+	return fmt.Sprintf("%s/%s%sprivate_token=%s&per_page=100", c.baseURL, path, separator, c.token)
 }
 
 func (c *Client) doRequest(method, path string, body interface{}) (*http.Response, error) {
@@ -77,31 +77,67 @@ func (p Project) Get(key string) interface{} {
 
 // ref: https://docs.gitlab.com/ee/api/groups.html#list-a-group-s-projects
 func (c *Client) GetGroupProjects(id int) ([]*Project, error) {
-	resp, err := c.doRequest("GET", fmt.Sprintf("groups/%d/projects", id), nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	bytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	projects := []*Project{}
-	if err := json.Unmarshal(bytes, &projects); err != nil {
-		return nil, err
-	}
-	return projects, nil
+	var projects []*Project
+	err := c.readPaginatedProjects(
+		fmt.Sprintf("groups/%d/projects", id),
+		func(obj interface{}) {
+			resp := obj.([]*Project)
+			for _, project := range resp {
+				projects = append(projects, project)
+			}
+		},
+	)
+	return projects, err
 }
 
 // ref: https://docs.gitlab.com/ee/api/projects.html#edit-project
 func (c *Client) UpdateProject(id float64, settings map[string]interface{}) error {
-	resp, err := c.doFormRequest("PUT", fmt.Sprintf("projects/%v", id), settings)
+	resp, err := c.doFormRequest(http.MethodPut, fmt.Sprintf("projects/%v", id), settings)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Unexpected response code: %s", resp.Status)
+	}
+	return nil
+}
+
+func (c *Client) readPaginatedProjects(path string, accumulate func(interface{})) error {
+	pagedURL, err := url.Parse(path)
+	if err != nil {
+		return err
+	}
+	values := url.Values{
+		"page":     []string{"1"},
+		"per_page": []string{"50"},
+	}
+	pagedURL.RawQuery = values.Encode()
+	for {
+		resp, err := c.doRequest(http.MethodGet, pagedURL.String(), nil)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			return fmt.Errorf("return code not 2XX: %s", resp.Status)
+		}
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		obj := []*Project{}
+		if err := json.Unmarshal(b, &obj); err != nil {
+			return err
+		}
+		accumulate(obj)
+		page := resp.Header.Get("x-next-page")
+		if len(page) == 0 {
+			break
+		}
+		q := pagedURL.Query()
+		q.Set("page", page)
+		pagedURL.RawQuery = q.Encode()
 	}
 	return nil
 }
