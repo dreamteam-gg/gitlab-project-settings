@@ -33,6 +33,13 @@ func CanProcessProject(name string) bool {
 	return false
 }
 
+func IsEqual(a, b interface{}) bool {
+	if fmt.Sprintf("%v", a) == fmt.Sprintf("%v", b) {
+		return true
+	}
+	return false
+}
+
 func main() {
 	var err error
 	flag.Parse()
@@ -55,7 +62,7 @@ func main() {
 		fmt.Println(name)
 		for setting, cfgVal := range cfg.Settings {
 			projVal := project.Get(setting)
-			if projVal != cfgVal {
+			if !IsEqual(projVal, cfgVal) {
 				fmt.Printf("\t%s = %v (%v)\n", setting, projVal, cfgVal)
 			}
 		}
