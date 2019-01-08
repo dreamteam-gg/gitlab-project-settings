@@ -191,10 +191,8 @@ func (c *Client) UpdateProjectProtectedBranches(project *Project, settings map[s
 
 		if !*flagDryRun && !equal {
 			// we need to unprotect branch before protecting, otherwise we get 409 "Protected branch '*' already exists"
-			_, err = c.doFormRequest(http.MethodDelete, fmt.Sprintf("projects/%d/protected_branches/%s", id, name), b)
-			if err != nil {
-				return err
-			}
+			c.doFormRequest(http.MethodDelete, fmt.Sprintf("projects/%d/protected_branches/%s", id, name), b)
+
 			_, err = c.doFormRequest(http.MethodPost, fmt.Sprintf("projects/%d/protected_branches", id), b)
 			if err != nil {
 				return err
@@ -501,12 +499,12 @@ func (c *Client) CreateProject(name string, namespace int, settings map[string]i
 		return err
 	}
 
-	p := []*Project{}
+	p := Project{}
 	if err := json.Unmarshal(resp, &p); err != nil {
 		return err
 	}
 
-	err = c.UpdateProject(p[0], settings)
+	err = c.UpdateProject(&p, settings)
 	if err != nil {
 		return err
 	}
