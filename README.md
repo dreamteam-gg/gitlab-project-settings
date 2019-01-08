@@ -13,7 +13,7 @@ Usage of ./gitlab-project-settings:
 ## Configuration
 
 Configuration supports passing top level fields as env variable with `GITLAB_` prefix:
-```
+```shell
 # strings
 GITLAB_GITLAB_PRIVATE_TOKEN=<sometoken>
 
@@ -22,7 +22,7 @@ GITLAB_ONLY_PROJECTS="some-project second-project"
 ```
 
 Complete example:
-```
+```yaml
 ---
 group_id: devops # groups name string
 gitlab_url: https://gitlab.com/api/v4
@@ -63,12 +63,16 @@ settings:
       job_events: true
       webhook: https://hooks.slack.com/services/123456578
       username: Harold1
+  webhooks:
+    "https://somehook.example.com/events":
+      merge_requests_events: true
+      enable_ssl_verification: true
 
 # override settings per project
 overrides:
   "some-project":
     webhooks:
-    "https://somehook.example.com/events":
-      merge_requests_events: true
-      enable_ssl_verification: true
+      "https://somehook.example.com/events":
+        merge_requests_events: true
+        enable_ssl_verification: true
 ```
