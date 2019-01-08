@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -34,7 +33,7 @@ func (c *Client) getPath(path string) string {
 	if strings.Contains(path, separator) {
 		separator = "&"
 	}
-	return fmt.Sprintf("%s/%s%sprivate_token=%s&per_page=100", c.baseURL, path, separator, c.token)
+	return fmt.Sprintf("%s/%s%sprivate_token=%s", c.baseURL, path, separator, c.token)
 }
 
 func (c *Client) doRequest(method, path string, body interface{}) (*http.Response, error) {
@@ -48,80 +47,37 @@ func (c *Client) doRequest(method, path string, body interface{}) (*http.Respons
 	}
 	req, err := http.NewRequest(method, c.getPath(path), buf)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error querying %s", path)
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Close = true
 	return c.c.Do(req)
 }
 
-func (c *Client) doFormRequest(method, path string, values map[string]interface{}) (*http.Response, error) {
-	form := url.Values{}
-	for key, val := range values {
-		form.Add(key, fmt.Sprintf("%v", val))
-	}
-	req, err := http.NewRequest(method, c.getPath(path), strings.NewReader(form.Encode()))
+func (c *Client) doFormRequest(method, path string, values map[string]interface{}) ([]byte, error) {
+	s, err := json.Marshal(values)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "multipart/form-data")
-	req.PostForm = form
-	return c.c.Do(req)
-}
-
-// ref: https://docs.gitlab.com/ee/api/groups.html#list-a-group-s-projects
-func (c *Client) GetGroupProjects(id int) ([]*Project, error) {
-	var projects []*Project
-	pagedURL, err := url.Parse(fmt.Sprintf("groups/%d/projects", id))
+	b := bytes.NewBuffer(s)
+	req, err := http.NewRequest(method, c.getPath(path), b)
+	if err != nil {
+		return nil, fmt.Errorf("Error querying %s", path)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.c.Do(req)
 	if err != nil {
 		return nil, err
-	}
-	values := url.Values{
-		"page":     []string{"1"},
-		"per_page": []string{"50"},
-	}
-	pagedURL.RawQuery = values.Encode()
-	for {
-		resp, err := c.doRequest(http.MethodGet, pagedURL.String(), nil)
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode < 200 || resp.StatusCode > 299 {
-			return nil, fmt.Errorf("return code not 2XX: %s", resp.Status)
-		}
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		prs := []*Project{}
-		if err := json.Unmarshal(b, &prs); err != nil {
-			return nil, err
-		}
-		for _, project := range prs {
-			projects = append(projects, project)
-		}
-		// accumulate(obj)
-		page := resp.Header.Get("x-next-page")
-		if len(page) == 0 {
-			break
-		}
-		q := pagedURL.Query()
-		q.Set("page", page)
-		pagedURL.RawQuery = q.Encode()
-	}
-	return projects, nil
-}
-
-// ref: https://docs.gitlab.com/ee/api/projects.html#edit-project
-func (c *Client) UpdateProject(id float64, settings map[string]interface{}) error {
-	resp, err := c.doFormRequest(http.MethodPut, fmt.Sprintf("projects/%v", id), settings)
-	if err != nil {
-		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Unexpected response code: %s", resp.Status)
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return nil, fmt.Errorf("return code not 2XX: %s", resp.Status)
 	}
-	return nil
+
+	r, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
 }
