@@ -18,14 +18,14 @@ func computeDiff(old, new map[string]interface{}) (string, bool) {
 
 	for p, a := range diff.Added {
 		equal = false
-		s := fmt.Sprintf("\t+ %s = %s\n", p.String(), a)
+		s := fmt.Sprintf("\t+ %v = %v\n", p.String(), a)
 		diffs.WriteString(formatter.Bold(formatter.Green(s)).String())
 	}
 
 	for p, m := range diff.Modified {
 		equal = false
 		oldVal := old
-		s := fmt.Sprintf("\t~ %s = %s => %s\n", p.String(), oldVal[pathToKey(p)], m)
+		s := fmt.Sprintf("\t~ %s = %v => %v\n", p.String(), oldVal[pathToKey(p)], m)
 		diffs.WriteString(formatter.Bold(formatter.Red(s)).String())
 	}
 
@@ -34,18 +34,6 @@ func computeDiff(old, new map[string]interface{}) (string, bool) {
 
 func pathToKey(p *messagediff.Path) string {
 	return strings.Trim(p.String(), "[\"]")
-}
-
-func getMapKeys(m map[string]interface{}) []string {
-	keys := make([]string, len(m))
-
-	i := 0
-	for k := range m {
-		keys[i] = k
-		i++
-	}
-
-	return keys
 }
 
 func newFormatter(noColor bool) aurora.Aurora {
