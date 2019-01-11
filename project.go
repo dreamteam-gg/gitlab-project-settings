@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	// "github.com/imdario/mergo"
 )
 
 type Project map[string]interface{}
@@ -97,6 +96,11 @@ func (c *Client) UpdateProject(project *Project, settings map[string]interface{}
 	}
 
 	err = c.UpdateProjectWebHooks(project, settings)
+	if err != nil {
+		return err
+	}
+
+	err = c.UpdateProjectDeployKeys(project, settings)
 	if err != nil {
 		return err
 	}
@@ -276,6 +280,48 @@ func (c *Client) UpdateProjectWebHooks(project *Project, settings map[string]int
 				if err != nil {
 					return err
 				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (c *Client) UpdateProjectDeployKeys(project *Project, settings map[string]interface{}) error {
+	id := int(project.Get("id").(float64))
+
+	keys := make(map[string]interface{})
+	if v, ok := settings["deploy_keys"]; ok {
+		keys["deploy_keys"] = v.([]interface{})
+	} else {
+		return nil
+	}
+
+	existingKeys, err := c.GetProjectDeployKeys(project)
+	if err != nil {
+		return err
+	}
+
+	newKeyIds := make([]int, len(keys["deploy_keys"].([]interface{})))
+	for i, k := range keys["deploy_keys"].([]interface{}) {
+		kId, err := c.GetDeployKeyIdByName(k.(string))
+		if err != nil {
+			return err
+		}
+		newKeyIds[i] = kId
+	}
+
+	diff, equal := computeDiff(existingKeys, keys)
+	if !equal {
+		fmt.Println("\tUpdating deploy keys")
+		fmt.Println(diff)
+	}
+
+	if !*flagDryRun && !equal {
+		for _, k := range newKeyIds {
+			_, err = c.doFormRequest(http.MethodPost, fmt.Sprintf("projects/%d/deploy_keys/%d/enable", id, k), nil)
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -480,6 +526,39 @@ func (c *Client) GetProjectWebHook(project *Project, url string) (int, map[strin
 	}
 
 	return 0, nil, nil
+}
+
+func (c *Client) GetProjectDeployKeys(project *Project) (map[string]interface{}, error) {
+	id := int(project.Get("id").(float64))
+	keys := make(map[string]interface{})
+
+	resp, err := c.doRequest(http.MethodGet, fmt.Sprintf("/projects/%d/deploy_keys", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return nil, fmt.Errorf("Error getting project %d hooks. Return code not 2XX: %s", id, resp.Status)
+	}
+
+	r, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	k := []map[string]interface{}{}
+	if err := json.Unmarshal(r, &k); err != nil {
+		return nil, err
+	}
+
+	keyNames := make([]interface{}, len(k))
+	for i, n := range k {
+		keyNames[i] = n["title"].(string)
+	}
+
+	keys["deploy_keys"] = keyNames
+
+	return keys, nil
 }
 
 // ref: https://docs.gitlab.com/ee/api/projects.html#create-project
