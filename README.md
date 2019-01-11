@@ -60,13 +60,24 @@ settings:
   services: # https://docs.gitlab.com/ee/api/services.html#createedit-slack-service
     slack:
       merge_requests_events: true
-      job_events: true
+      notify_only_broken_pipelines: false
+      notify_only_default_branch: false
+      push_events: false
+      issues_events: false
+      confidential_issues_events: false
+      tag_push_events: false
+      note_events: false
+      pipeline_events: false
+      wiki_page_events: false
       webhook: https://hooks.slack.com/services/123456578
       username: Harold1
-  webhooks:
+  webhooks: # https://docs.gitlab.com/ee/api/projects.html#add-project-hook
     "https://somehook.example.com/events":
       merge_requests_events: true
       enable_ssl_verification: true
+  deploy_keys:
+    - deploy-key-title
+    - second-deploy-key
 
 # override settings per project
 overrides:
