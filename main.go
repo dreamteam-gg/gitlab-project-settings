@@ -10,12 +10,13 @@ import (
 var (
 	flagConfigFile = flag.String("config", "./config.yml", "Path to configuration file")
 	flagDryRun     = flag.Bool("dry-run", false, "Dry run mode")
+	flagNoColours  = flag.Bool("no-colours", false, "Disable colour output")
 	cfg            *Config
 	formatter      aurora.Aurora
 )
 
 func init() {
-	formatter = aurora.NewAurora(isTerminal())
+	formatter = aurora.NewAurora(!*flagNoColours)
 }
 
 func InArray(k string, arr []string) bool {

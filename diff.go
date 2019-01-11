@@ -2,11 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/logrusorgru/aurora"
-	"github.com/mattn/go-isatty"
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
@@ -34,26 +31,4 @@ func computeDiff(old, new map[string]interface{}) (string, bool) {
 
 func pathToKey(p *messagediff.Path) string {
 	return strings.Trim(p.String(), "[\"]")
-}
-
-func newFormatter(noColor bool) aurora.Aurora {
-	var formatter aurora.Aurora
-	if !isTerminal() {
-		formatter = aurora.NewAurora(false)
-	} else {
-		formatter = aurora.NewAurora(true)
-	}
-	return formatter
-}
-
-func isTerminal() bool {
-	fd := os.Stdout.Fd()
-	switch {
-	case isatty.IsTerminal(fd):
-		return true
-	case isatty.IsCygwinTerminal(fd):
-		return true
-	default:
-		return false
-	}
 }
