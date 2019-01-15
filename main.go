@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/logrusorgru/aurora"
 )
@@ -57,6 +58,20 @@ func IsEqual(a, b interface{}) bool {
 	return false
 }
 
+func CopyMap(m map[string]interface{}) map[string]interface{} {
+	cp := make(map[string]interface{})
+	for k, v := range m {
+		vm, ok := v.(map[string]interface{})
+		if ok {
+			cp[k] = CopyMap(vm)
+		} else {
+			cp[k] = v
+		}
+	}
+
+	return cp
+}
+
 func main() {
 	var err error
 
@@ -64,19 +79,22 @@ func main() {
 
 	cfg, err = ConfigFromFile(*flagConfigFile)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	client := NewClient(cfg.GitLabUrl, cfg.GitLabToken)
 
 	groupId, err := client.GetGroupIdByName(cfg.GroupID)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	projects, err := client.GetGroupProjects(groupId)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	fmt.Printf("Found %d projects\n", len(projects))
@@ -87,9 +105,11 @@ func main() {
 		}
 		settings := cfg.Settings
 		if v, ok := cfg.Overrides[name]; ok {
+			settings = CopyMap(settings)
 			err := MergeConfig(settings, v.(map[string]interface{}))
 			if err != nil {
-				panic(err)
+				fmt.Println(err)
+				os.Exit(1)
 			}
 		}
 		err = client.UpdateProject(project, settings)
@@ -109,9 +129,11 @@ func main() {
 
 			settings := cfg.Settings
 			if v, ok := cfg.Overrides[name]; ok {
+				settings = CopyMap(settings)
 				err := MergeConfig(settings, v.(map[string]interface{}))
 				if err != nil {
-					panic(err)
+					fmt.Println(err)
+					os.Exit(1)
 				}
 			}
 
