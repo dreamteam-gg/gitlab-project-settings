@@ -60,7 +60,7 @@ func (c *Client) GetGroupProjects(id int) ([]*Project, error) {
 
 // ref: https://docs.gitlab.com/ee/api/projects.html#edit-project
 func (c *Client) UpdateProject(project *Project, settings map[string]interface{}) error {
-	id := project.Get("id").(float64)
+	id := int(project.Get("id").(float64))
 	name := project.Get("name").(string)
 	var projectSettings map[string]interface{}
 
@@ -111,7 +111,7 @@ func (c *Client) UpdateProject(project *Project, settings map[string]interface{}
 
 // ref: https://docs.gitlab.com/ee/api/merge_request_approvals.html#change-configuration
 func (c *Client) UpdateProjectApprovals(project *Project, settings map[string]interface{}) error {
-	id := project.Get("id").(float64)
+	id := int(project.Get("id").(float64))
 
 	var approvalSettings map[string]interface{}
 	if v, ok := settings["approvals"]; ok {
@@ -331,7 +331,7 @@ func (c *Client) UpdateProjectDeployKeys(project *Project, settings map[string]i
 
 func (c *Client) GetProjectApprovals(project *Project) (map[string]interface{}, error) {
 	var approvals map[string]interface{}
-	id := project.Get("id").(float64)
+	id := int(project.Get("id").(float64))
 
 	resp, err := c.doRequest(http.MethodGet, fmt.Sprintf("projects/%v/approvals", id), nil)
 	if err != nil {
@@ -425,7 +425,7 @@ func (c *Client) ConvertApprovalIdsToNames(settings map[string]interface{}) (map
 
 func (c *Client) GetProjectProtectedBranches(project *Project) ([]map[string]interface{}, error) {
 	var branches []map[string]interface{}
-	id := project.Get("id").(float64)
+	id := int(project.Get("id").(float64))
 
 	resp, err := c.doRequest(http.MethodGet, fmt.Sprintf("projects/%v/protected_branches", id), nil)
 	if err != nil {
@@ -433,7 +433,7 @@ func (c *Client) GetProjectProtectedBranches(project *Project) ([]map[string]int
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, fmt.Errorf("Error getting approval settings. Return code not 2XX: %s", resp.Status)
+		return nil, fmt.Errorf("Error getting protected branch settings. Return code not 2XX: %s", resp.Status)
 	}
 
 	r, err := ioutil.ReadAll(resp.Body)
