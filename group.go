@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 )
 
 type Group map[string]interface{}
@@ -14,7 +15,7 @@ func (p Group) Get(key string) interface{} {
 }
 
 func (c *Client) GetGroupIdByName(name string) (int, error) {
-	resp, err := c.doRequest(http.MethodGet, fmt.Sprintf("groups?search=%s", name), nil)
+	resp, err := c.doRequest(http.MethodGet, fmt.Sprintf("groups/%s", url.QueryEscape(name)), nil)
 	if err != nil {
 		return 0, err
 	}
@@ -28,16 +29,12 @@ func (c *Client) GetGroupIdByName(name string) (int, error) {
 		return 0, err
 	}
 
-	grp := []*Group{}
+	grp := Group{}
 	if err := json.Unmarshal(b, &grp); err != nil {
 		return 0, err
 	}
 
-	if l := len(grp); l != 1 {
-		return 0, fmt.Errorf("Found %d %s groups, need one", l, name)
-	}
-
-	return int(grp[0].Get("id").(float64)), nil
+	return int(grp.Get("id").(float64)), nil
 }
 
 func (c *Client) GetGroupNameById(id int) (string, error) {
@@ -60,5 +57,9 @@ func (c *Client) GetGroupNameById(id int) (string, error) {
 		return "", err
 	}
 
-	return grp.Get("name").(string), nil
+	return grp.Get("full_path").(string), nil
+}
+
+func normalizeGroupName(name string) string {
+	return url.QueryEscape(name)
 }
