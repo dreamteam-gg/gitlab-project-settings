@@ -375,20 +375,24 @@ func (c *Client) ConvertApprovalNamesToIds(settings map[string]interface{}) (map
 	groups := make([]int, 0)
 	users := make([]int, 0)
 
-	for _, name := range settings["approver_ids"].([]interface{}) {
-		user, err := c.GetUserIdByName(name.(string))
-		if err != nil {
-			return nil, err
+	if v, ok := settings["approver_ids"]; ok {
+		for _, name := range v.([]interface{}) {
+			user, err := c.GetUserIdByName(name.(string))
+			if err != nil {
+				return nil, err
+			}
+			users = append(users, user)
 		}
-		users = append(users, user)
 	}
 
-	for _, name := range settings["approver_group_ids"].([]interface{}) {
-		group, err := c.GetGroupIdByName(name.(string))
-		if err != nil {
-			return nil, err
+	if v, ok := settings["approver_group_ids"]; ok {
+		for _, name := range v.([]interface{}) {
+			group, err := c.GetGroupIdByName(name.(string))
+			if err != nil {
+				return nil, err
+			}
+			groups = append(groups, group)
 		}
-		groups = append(groups, group)
 	}
 
 	converted["approver_group_ids"] = groups
