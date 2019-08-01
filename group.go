@@ -59,7 +59,3 @@ func (c *Client) GetGroupNameById(id int) (string, error) {
 
 	return grp.Get("full_path").(string), nil
 }
-
-func normalizeGroupName(name string) string {
-	return url.QueryEscape(name)
-}
