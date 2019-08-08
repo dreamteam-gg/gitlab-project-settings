@@ -59,6 +59,7 @@ func (c *Client) doFormRequest(method, path string, values map[string]interface{
 	if err != nil {
 		return nil, err
 	}
+
 	b := bytes.NewBuffer(s)
 	req, err := http.NewRequest(method, c.getPath(path), b)
 	if err != nil {

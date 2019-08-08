@@ -12,10 +12,10 @@ import (
 type Config struct {
 	GitLabUrl       string                 `yaml:"gitlab_url"`
 	GitLabToken     string                 `yaml:"gitlab_private_token"`
-	StopOnError     bool                   `yaml:"stop_on_error"`
 	CreateMissing   bool                   `yaml:"create_missing"`
 	GroupID         string                 `yaml:"group_id"`
-	Settings        map[string]interface{} `yaml:"settings"`
+	GroupSettings   map[string]interface{} `yaml:"group_settings"`
+	Settings        map[string]interface{} `yaml:"project_settings"`
 	Overrides       map[string]interface{} `yaml:"overrides"`
 	OnlyProject     []string               `yaml:"only_projects"`
 	ExcludeProjects []string               `yaml:"exclude_projects"`
@@ -35,10 +35,10 @@ func ConfigFromFile(file string) (*Config, error) {
 	c := Config{
 		GitLabUrl:       strings.TrimSuffix(viper.GetString("gitlab_url"), "/"),
 		GitLabToken:     viper.GetString("gitlab_private_token"),
-		StopOnError:     viper.GetBool("stop_on_error"),
 		CreateMissing:   viper.GetBool("create_missing"),
 		GroupID:         viper.GetString("group_id"),
-		Settings:        viper.GetStringMap("settings"),
+		GroupSettings:   viper.GetStringMap("group_settings"),
+		Settings:        viper.GetStringMap("project_settings"),
 		Overrides:       viper.GetStringMap("overrides"),
 		OnlyProject:     viper.GetStringSlice("only_projects"),
 		ExcludeProjects: viper.GetStringSlice("exclude_projects"),

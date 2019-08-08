@@ -91,6 +91,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	err = client.UpdateGroup(groupId, cfg.GroupSettings)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	projects, err := client.GetGroupProjects(groupId)
 	if err != nil {
 		fmt.Println(err)
@@ -115,9 +121,7 @@ func main() {
 		err = client.UpdateProject(project, settings)
 		if err != nil {
 			fmt.Println(err)
-			if cfg.StopOnError {
-				break
-			}
+			os.Exit(1)
 		}
 	}
 
@@ -140,9 +144,7 @@ func main() {
 			err = client.CreateProject(name, groupId, cfg.Settings)
 			if err != nil {
 				fmt.Println(err)
-				if cfg.StopOnError {
-					break
-				}
+				os.Exit(1)
 			}
 		}
 	}

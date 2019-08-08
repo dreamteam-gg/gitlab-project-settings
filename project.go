@@ -69,11 +69,11 @@ func (c *Client) UpdateProject(project *Project, settings map[string]interface{}
 	}
 
 	fmt.Println(formatter.Bold(name).String())
-	diff, equal := computeDiff((map[string]interface{})(*project), projectSettings)
-	if !equal {
+	diff, _, _, equal := computeDiff((map[string]interface{})(*project), projectSettings)
+	if !equal && len(projectSettings) > 0 {
 		fmt.Println(diff)
 	}
-	if !*flagDryRun && !equal {
+	if !*flagDryRun && !equal && len(projectSettings) > 0 {
 		_, err := c.doFormRequest(http.MethodPut, fmt.Sprintf("projects/%v", id), projectSettings)
 		if err != nil {
 			return err
@@ -128,12 +128,12 @@ func (c *Client) UpdateProjectApprovals(project *Project, settings map[string]in
 		return err
 	}
 
-	diff, equal := computeDiff(existingApprovals, approvalSettings)
-	if !equal {
+	diff, _, _, equal := computeDiff(existingApprovals, approvalSettings)
+	if !equal && len(approvalSettings) > 0 {
 		fmt.Println("\t Updating approvals")
 		fmt.Println(diff)
 	}
-	if !*flagDryRun && !equal {
+	if !*flagDryRun && !equal && len(approvalSettings) > 0 {
 		_, err := c.doFormRequest(http.MethodPost, fmt.Sprintf("projects/%d/approvals", int(id)), approvalSettings)
 		if err != nil {
 			return err
@@ -150,13 +150,13 @@ func (c *Client) UpdateProjectApprovals(project *Project, settings map[string]in
 		return err
 	}
 
-	diff, equal = computeDiff(approvalsNames, approversSettings)
-	if !equal {
+	diff, _, _, equal = computeDiff(approvalsNames, approversSettings)
+	if !equal && len(approversSettings) > 0 {
 		fmt.Println("\t Updating approvers")
 		fmt.Println(diff)
 	}
 
-	if !*flagDryRun && !equal {
+	if !*flagDryRun && !equal && len(approversSettings) > 0 {
 		_, err := c.doFormRequest(http.MethodPut, fmt.Sprintf("projects/%d/approvers", int(id)), approvalIds)
 		if err != nil {
 			return err
@@ -187,7 +187,7 @@ func (c *Client) UpdateProjectProtectedBranches(project *Project, settings map[s
 
 	for _, b := range protectedBranches {
 		name := b["name"].(string)
-		diff, equal := computeDiff(FinBranchInList(name, existingBranches), b)
+		diff, _, _, equal := computeDiff(FindBranchInList(name, existingBranches), b)
 		if !equal {
 			fmt.Printf("\t Updating branch '%s'\n", name)
 			fmt.Println(diff)
@@ -224,7 +224,7 @@ func (c *Client) UpdateProjectServices(project *Project, settings map[string]int
 		}
 		newSettings := s.(map[string]interface{})
 
-		diff, equal := computeDiff(existingSettings, newSettings)
+		diff, _, _, equal := computeDiff(existingSettings, newSettings)
 		if !equal {
 			fmt.Printf("\t Updating service '%s'\n", n)
 			fmt.Println(diff)
@@ -257,7 +257,7 @@ func (c *Client) UpdateProjectWebHooks(project *Project, settings map[string]int
 			return err
 		}
 
-		diff, equal := computeDiff(existingSettings, h.(map[string]interface{}))
+		diff, _, _, equal := computeDiff(existingSettings, h.(map[string]interface{}))
 		if !equal {
 			fmt.Printf("\t Updating hook '%s'\n", u)
 			fmt.Println(diff)
@@ -311,7 +311,7 @@ func (c *Client) UpdateProjectDeployKeys(project *Project, settings map[string]i
 		newKeyIds[i] = kId
 	}
 
-	diff, equal := computeDiff(existingKeys, keys)
+	diff, _, _, equal := computeDiff(existingKeys, keys)
 	if !equal {
 		fmt.Println("\tUpdating deploy keys")
 		fmt.Println(diff)
@@ -454,13 +454,13 @@ func (c *Client) GetProjectProtectedBranches(project *Project) ([]map[string]int
 		branch := make(map[string]interface{})
 		branch["name"] = b["name"].(string)
 		if v := b["push_access_levels"].([]interface{}); len(v) > 0 {
-			branch["push_access_level"] = FloatToBranchAccess(v[0])
+			branch["push_access_level"] = FloatToAccess(v[0])
 		}
 		if v := b["merge_access_levels"].([]interface{}); len(v) > 0 {
-			branch["merge_access_level"] = FloatToBranchAccess(v[0])
+			branch["merge_access_level"] = FloatToAccess(v[0])
 		}
 		if v := b["unprotect_access_levels"].([]interface{}); len(v) > 0 {
-			branch["unprotect_access_level"] = FloatToBranchAccess(v[0])
+			branch["unprotect_access_level"] = FloatToAccess(v[0])
 		}
 
 		branches = append(branches, branch)

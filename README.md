@@ -27,7 +27,6 @@ Complete example:
 group_id: devops # groups name string
 gitlab_url: https://gitlab.com/api/v4
 gitlab_private_token: asdgfdhgfjhg
-stop_on_error: true
 create_missing: true # create projects from only_projects if they are missing
 
 exclude_projects: []
@@ -35,8 +34,12 @@ only_projects:
   - some-project
   - second-project
 
+group_settings:
+  members:
+    some_user_name: Maintainer # Guest, Reporter,Developer, Maintainer, Owner
+
 # settings for all projects
-settings:
+project_settings:
   project: # ref: https://docs.gitlab.com/ee/api/projects.html#edit-project
     only_allow_merge_if_pipeline_succeeds: true
     only_allow_merge_if_all_discussions_are_resolved: true
