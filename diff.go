@@ -7,8 +7,18 @@ import (
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
-func computeDiff(old, new map[string]interface{}) (string, bool) {
+type changes struct {
+	Added    []string
+	Modified []string
+	Removed  []string
+}
+
+// computeDiff returns updated and added diff, removed diff, removed list, bool for change
+func computeDiff(old, new map[string]interface{}) (string, string, changes, bool) {
 	var diffs strings.Builder
+	var removedDiffs strings.Builder
+	var changedItems changes
+
 	equal := true
 
 	diff, _ := messagediff.DeepDiff(old, new)
@@ -17,16 +27,24 @@ func computeDiff(old, new map[string]interface{}) (string, bool) {
 		equal = false
 		s := fmt.Sprintf("\t+ %v = %v\n", p.String(), a)
 		diffs.WriteString(formatter.Bold(formatter.Green(s)).String())
+		changedItems.Added = append(changedItems.Added, pathToKey(p))
 	}
 
 	for p, m := range diff.Modified {
 		equal = false
 		oldVal := old
 		s := fmt.Sprintf("\t~ %s = %v => %v\n", p.String(), oldVal[pathToKey(p)], m)
-		diffs.WriteString(formatter.Bold(formatter.Red(s)).String())
+		diffs.WriteString(formatter.Bold(formatter.Brown(s)).String())
+		changedItems.Modified = append(changedItems.Modified, pathToKey(p))
 	}
 
-	return diffs.String(), equal
+	for p, r := range diff.Removed {
+		s := fmt.Sprintf("\t- %v = %v\n", p.String(), r)
+		removedDiffs.WriteString(formatter.Bold(formatter.Red(s)).String())
+		changedItems.Removed = append(changedItems.Removed, pathToKey(p))
+	}
+
+	return diffs.String(), removedDiffs.String(), changedItems, equal
 }
 
 func pathToKey(p *messagediff.Path) string {
