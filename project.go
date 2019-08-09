@@ -474,6 +474,7 @@ func (c *Client) GetProjectProtectedBranches(project *Project) ([]map[string]int
 				allowedToPush = append(allowedToPush, map[string]interface{}{
 					"user_id": u,
 				})
+				fallthrough
 			case b["group_id"] != nil:
 				g, err := c.GetGroupNameById(int(b["group_id"].(float64)))
 				if err != nil {

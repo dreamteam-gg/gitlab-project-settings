@@ -31,8 +31,12 @@ func computeDiff(old, new map[string]interface{}) (string, string, changes, bool
 	}
 
 	for p, m := range diff.Modified {
-		equal = false
 		oldVal := old
+		// for comparing lists of maps which messagediff always sets as modified
+		if fmt.Sprint(oldVal[pathToKey(p)]) == fmt.Sprint(m) {
+			continue
+		}
+		equal = false
 		s := fmt.Sprintf("\t~ %s = %v => %v\n", p.String(), oldVal[pathToKey(p)], m)
 		diffs.WriteString(formatter.Bold(formatter.Brown(s)).String())
 		changedItems.Modified = append(changedItems.Modified, pathToKey(p))
