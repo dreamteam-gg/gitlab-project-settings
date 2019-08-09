@@ -48,6 +48,7 @@ project_settings:
     snippets_enabled: false
     wiki_enabled: false
     merge_method: ff
+    shared_runners_enabled: false
   approvals: # ref: https://docs.gitlab.com/ee/api/merge_request_approvals.html#change-configuration
     approvals_before_merge: 1
     reset_approvals_on_push: true
@@ -60,6 +61,9 @@ project_settings:
       push_access_level: NoAccess # NoAccess, Developer, Maintainer, Admin
       merge_access_level: Maintainer
       unprotect_access_level: NoAccess
+      allowed_to_merge:
+        - user_id: user_name
+        - group_id: devops
   services: # https://docs.gitlab.com/ee/api/services.html#createedit-slack-service
     slack:
       merge_requests_events: true
