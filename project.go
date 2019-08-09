@@ -180,7 +180,7 @@ func (c *Client) UpdateProjectProtectedBranches(project *Project, settings map[s
 		return nil
 	}
 
-	protectedBranches, err := UnmarshalBranches(settingBranches)
+	protectedBranches, err := c.UnmarshalBranches(settingBranches)
 	if err != nil {
 		return err
 	}
@@ -191,6 +191,11 @@ func (c *Client) UpdateProjectProtectedBranches(project *Project, settings map[s
 		if !equal {
 			fmt.Printf("\t Updating branch '%s'\n", name)
 			fmt.Println(diff)
+		}
+
+		b, err = c.BranchAllowedToIds(b)
+		if err != nil {
+			return err
 		}
 
 		if !*flagDryRun && !equal {
@@ -453,15 +458,82 @@ func (c *Client) GetProjectProtectedBranches(project *Project) ([]map[string]int
 	for _, b := range brnch {
 		branch := make(map[string]interface{})
 		branch["name"] = b["name"].(string)
-		if v := b["push_access_levels"].([]interface{}); len(v) > 0 {
-			branch["push_access_level"] = FloatToAccess(v[0])
+		var allowedToPush []map[string]interface{}
+		var allowedToMerge []map[string]interface{}
+		var allowedToUnprotect []map[string]interface{}
+
+		for _, v := range b["push_access_levels"].([]interface{}) {
+			switch b := v.(map[string]interface{}); {
+			case b["user_id"] == nil && b["group_id"] == nil:
+				branch["push_access_level"] = FloatToAccess(v)
+			case b["user_id"] != nil:
+				u, err := c.GetUserNameById(int(b["user_id"].(float64)))
+				if err != nil {
+					return nil, err
+				}
+				allowedToPush = append(allowedToPush, map[string]interface{}{
+					"user_id": u,
+				})
+			case b["group_id"] != nil:
+				g, err := c.GetGroupNameById(int(b["group_id"].(float64)))
+				if err != nil {
+					return nil, err
+				}
+				allowedToPush = append(allowedToPush, map[string]interface{}{
+					"group_id": g,
+				})
+			}
 		}
-		if v := b["merge_access_levels"].([]interface{}); len(v) > 0 {
-			branch["merge_access_level"] = FloatToAccess(v[0])
+
+		for _, v := range b["merge_access_levels"].([]interface{}) {
+			switch b := v.(map[string]interface{}); {
+			case b["user_id"] == nil && b["group_id"] == nil:
+				branch["merge_access_level"] = FloatToAccess(v)
+			case b["user_id"] != nil:
+				u, err := c.GetUserNameById(int(b["user_id"].(float64)))
+				if err != nil {
+					return nil, err
+				}
+				allowedToMerge = append(allowedToMerge, map[string]interface{}{
+					"user_id": u,
+				})
+			case b["group_id"] != nil:
+				g, err := c.GetGroupNameById(int(b["group_id"].(float64)))
+				if err != nil {
+					return nil, err
+				}
+				allowedToMerge = append(allowedToMerge, map[string]interface{}{
+					"group_id": g,
+				})
+			}
 		}
-		if v := b["unprotect_access_levels"].([]interface{}); len(v) > 0 {
-			branch["unprotect_access_level"] = FloatToAccess(v[0])
+
+		for _, v := range b["unprotect_access_levels"].([]interface{}) {
+			switch b := v.(map[string]interface{}); {
+			case b["user_id"] == nil && b["group_id"] == nil:
+				branch["unprotect_access_level"] = FloatToAccess(v)
+			case b["user_id"] != nil:
+				u, err := c.GetUserNameById(int(b["user_id"].(float64)))
+				if err != nil {
+					return nil, err
+				}
+				allowedToUnprotect = append(allowedToUnprotect, map[string]interface{}{
+					"user_id": u,
+				})
+			case b["group_id"] != nil:
+				g, err := c.GetGroupNameById(int(b["group_id"].(float64)))
+				if err != nil {
+					return nil, err
+				}
+				allowedToUnprotect = append(allowedToUnprotect, map[string]interface{}{
+					"group_id": g,
+				})
+			}
 		}
+
+		branch["allowed_to_push"] = allowedToPush
+		branch["allowed_to_merge"] = allowedToMerge
+		branch["allowed_to_unprotect"] = allowedToUnprotect
 
 		branches = append(branches, branch)
 	}
