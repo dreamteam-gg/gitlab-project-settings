@@ -141,7 +141,7 @@ func main() {
 				}
 			}
 
-			err = client.CreateProject(name, groupId, cfg.Settings)
+			err = client.CreateProject(name, groupId, settings)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)

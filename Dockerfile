@@ -7,6 +7,6 @@ ADD . .
 RUN GOFLAGS=-mod=vendor GO111MODULE=on CGO_ENABLED=0 GOOS=linux go build \
     -a -ldflags '-extldflags "-static"' -o gitlab-project-settings .
 
-FROM gcr.io/distroless/base@sha256:e37cf3289c1332c5123cbf419a1657c8dad0811f2f8572433b668e13747718f8
+FROM alpine:3.10.1@sha256:6a92cd1fcdc8d8cdec60f33dda4db2cb1fcdcacf3410a8e05b3741f44a9b5998
 
 COPY --from=builder /build/gitlab-project-settings   /bin/gitlab-project-settings
