@@ -64,6 +64,8 @@ project_settings:
       allowed_to_merge:
         - user_id: user_name
         - group_id: devops
+      allowed_to_push:
+        - user_id: user_name
   services: # https://docs.gitlab.com/ee/api/services.html#createedit-slack-service
     slack:
       merge_requests_events: true
@@ -88,7 +90,7 @@ project_settings:
 
 # override settings per project
 overrides:
-  "some-project":
+  "some-project": # must be in quotes
     webhooks:
       "https://somehook.example.com/events":
         merge_requests_events: true
