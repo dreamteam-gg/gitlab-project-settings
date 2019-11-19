@@ -463,10 +463,13 @@ func (c *Client) GetProjectProtectedBranches(project *Project) ([]map[string]int
 		var allowedToUnprotect []map[string]interface{}
 
 		for _, v := range b["push_access_levels"].([]interface{}) {
-			switch b := v.(map[string]interface{}); {
-			case b["user_id"] == nil && b["group_id"] == nil:
+			b := v.(map[string]interface{})
+
+			if b["user_id"] == nil && b["group_id"] == nil {
 				branch["push_access_level"] = FloatToAccess(v)
-			case b["user_id"] != nil:
+			}
+
+			if b["user_id"] != nil {
 				u, err := c.GetUserNameById(int(b["user_id"].(float64)))
 				if err != nil {
 					return nil, err
@@ -474,8 +477,9 @@ func (c *Client) GetProjectProtectedBranches(project *Project) ([]map[string]int
 				allowedToPush = append(allowedToPush, map[string]interface{}{
 					"user_id": u,
 				})
-				fallthrough
-			case b["group_id"] != nil:
+			}
+
+			if b["group_id"] != nil {
 				g, err := c.GetGroupNameById(int(b["group_id"].(float64)))
 				if err != nil {
 					return nil, err
