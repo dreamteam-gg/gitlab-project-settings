@@ -71,11 +71,12 @@ func (c *Client) doFormRequest(method, path string, values map[string]interface{
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, fmt.Errorf("return code not 2XX: %s", resp.Status)
-	}
 
 	r, err := ioutil.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return nil, fmt.Errorf("return code not 2XX: %s, message: %s", resp.Status, string(r))
+	}
+
 	if err != nil {
 		return nil, err
 	}
