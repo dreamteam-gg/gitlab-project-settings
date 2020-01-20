@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/logrusorgru/aurora"
 )
@@ -110,7 +111,7 @@ func main() {
 			continue
 		}
 		settings := cfg.Settings
-		if v, ok := cfg.Overrides[name]; ok {
+		if v, ok := cfg.Overrides[strings.ToLower(name)]; ok {
 			settings = CopyMap(settings)
 			err := MergeConfig(settings, v.(map[string]interface{}))
 			if err != nil {
