@@ -1,4 +1,4 @@
-FROM golang:1.12.7-alpine@sha256:87e527712342efdb8ec5ddf2d57e87de7bd4d2fedf9f6f3547ee5768bb3c43ff AS builder
+FROM golang:1.14.0-alpine3.11@sha256:6578dc0c1bde86ccef90e23da3cdaa77fe9208d23c1bb31d942c8b663a519fa5 AS builder
 
 WORKDIR /build
 
@@ -9,7 +9,7 @@ ADD . .
 RUN GOFLAGS=-mod=vendor GO111MODULE=on CGO_ENABLED=0 GOOS=linux go build \
     -a -ldflags '-extldflags "-static"' -o gitlab-project-settings .
 
-FROM alpine:3.10.1@sha256:6a92cd1fcdc8d8cdec60f33dda4db2cb1fcdcacf3410a8e05b3741f44a9b5998
+FROM gcr.io/distroless/base:nonroot@sha256:54c459100e9d420e023b0aecc43f7010d2731b6163dd8e060906e2dec4c59890
 
 COPY --from=builder /etc/ssl/certs /etc/ssl/certs
-COPY --from=builder /build/gitlab-project-settings   /bin/gitlab-project-settings
+COPY --from=builder /build/gitlab-project-settings /bin/gitlab-project-settings
