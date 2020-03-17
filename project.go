@@ -550,13 +550,13 @@ func (c *Client) GetProjectProtectedBranches(project *Project) ([]map[string]int
 func (c *Client) GetProjectService(project *Project, service string) (map[string]interface{}, error) {
 	id := int(project.Get("id").(float64))
 
-	resp, err := c.doRequest(http.MethodGet, fmt.Sprintf("/projects/%d/services/%s", id, service), nil)
+	resp, err := c.doRequest(http.MethodGet, fmt.Sprintf("projects/%d/services/%s", id, service), nil)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, fmt.Errorf("Error getting %s settings. Return code not 2XX: %s", service, resp.Status)
+		return nil, fmt.Errorf("Error getting %s settings. Return code not 2XX: %s, headers: %v", service, resp.Status, resp.Header)
 	}
 
 	r, err := ioutil.ReadAll(resp.Body)
@@ -581,7 +581,7 @@ func (c *Client) GetProjectService(project *Project, service string) (map[string
 func (c *Client) GetProjectWebHook(project *Project, url string) (int, map[string]interface{}, error) {
 	id := int(project.Get("id").(float64))
 
-	resp, err := c.doRequest(http.MethodGet, fmt.Sprintf("/projects/%d/hooks", id), nil)
+	resp, err := c.doRequest(http.MethodGet, fmt.Sprintf("projects/%d/hooks", id), nil)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -613,7 +613,7 @@ func (c *Client) GetProjectDeployKeys(project *Project) (map[string]interface{},
 	id := int(project.Get("id").(float64))
 	keys := make(map[string]interface{})
 
-	resp, err := c.doRequest(http.MethodGet, fmt.Sprintf("/projects/%d/deploy_keys", id), nil)
+	resp, err := c.doRequest(http.MethodGet, fmt.Sprintf("projects/%d/deploy_keys", id), nil)
 	if err != nil {
 		return nil, err
 	}

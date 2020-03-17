@@ -24,7 +24,7 @@ GITLAB_ONLY_PROJECTS="some-project second-project"
 Complete example:
 ```yaml
 ---
-group_id: devops # groups name string
+group_id: devops # groups name string, does not work with personal accounts
 gitlab_url: https://gitlab.com/api/v4
 gitlab_private_token: asdgfdhgfjhg
 create_missing: true # create projects from only_projects if they are missing
@@ -37,6 +37,11 @@ only_projects:
 group_settings:
   members:
     some_user_name: Maintainer # Guest, Reporter,Developer, Maintainer, Owner
+
+# mask diff for any fields containing this words
+mask:
+  - password
+  - webhook
 
 # settings for all projects
 project_settings:
