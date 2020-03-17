@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/viper"
 	"gopkg.in/d4l3k/messagediff.v1"
 )
 
@@ -25,7 +26,7 @@ func computeDiff(old, new map[string]interface{}) (string, string, changes, bool
 
 	for p, a := range diff.Added {
 		equal = false
-		s := fmt.Sprintf("\t+ %v = %v\n", p.String(), a)
+		s := fmt.Sprintf("\t+ %v = %v\n", p.String(), mask(p.String(), a))
 		diffs.WriteString(formatter.Bold(formatter.Green(s)).String())
 		changedItems.Added = append(changedItems.Added, pathToKey(p))
 	}
@@ -37,13 +38,13 @@ func computeDiff(old, new map[string]interface{}) (string, string, changes, bool
 			continue
 		}
 		equal = false
-		s := fmt.Sprintf("\t~ %s = %v => %v\n", p.String(), oldVal[pathToKey(p)], m)
-		diffs.WriteString(formatter.Bold(formatter.Brown(s)).String())
+		s := fmt.Sprintf("\t~ %s = %v => %v\n", p.String(), mask(p.String(), oldVal[pathToKey(p)]), mask(p.String(), m))
+		diffs.WriteString(formatter.Bold(formatter.Yellow(s)).String())
 		changedItems.Modified = append(changedItems.Modified, pathToKey(p))
 	}
 
 	for p, r := range diff.Removed {
-		s := fmt.Sprintf("\t- %v = %v\n", p.String(), r)
+		s := fmt.Sprintf("\t- %v = %v\n", p.String(), mask(p.String(), r))
 		removedDiffs.WriteString(formatter.Bold(formatter.Red(s)).String())
 		changedItems.Removed = append(changedItems.Removed, pathToKey(p))
 	}
@@ -53,4 +54,13 @@ func computeDiff(old, new map[string]interface{}) (string, string, changes, bool
 
 func pathToKey(p *messagediff.Path) string {
 	return strings.Trim(p.String(), "[\"]")
+}
+
+func mask(key string, value interface{}) interface{} {
+	for _, k := range viper.GetStringSlice("mask") {
+		if strings.Contains(key, k) {
+			return "**redacted**"
+		}
+	}
+	return value
 }
