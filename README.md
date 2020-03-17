@@ -12,6 +12,8 @@ Usage of ./gitlab-project-settings:
 
 ## Configuration
 
+### Top level configuration variables
+
 Configuration supports passing top level fields as env variable with `GITLAB_` prefix:
 ```shell
 # strings
@@ -21,7 +23,34 @@ GITLAB_GITLAB_PRIVATE_TOKEN=<sometoken>
 GITLAB_ONLY_PROJECTS="some-project second-project"
 ```
 
-Complete example:
+### Environment variable substitution
+
+Any key in configuration can be set as env variable. For example set Jira service password via `JIRA_PASSWORD` env variable:
+
+```yaml
+...
+project_settings:
+  services:
+    # https://docs.gitlab.com/ee/api/services.html#createedit-jira-service
+    jira:
+      url: https://jira.example.com
+      username: admin
+      password: ${JIRA_PASSWORD}
+...
+```
+
+### Masking output
+
+To hide field values from diff output add them to `mask` list in configuration:
+```yaml
+...
+mask:
+  - password
+...
+```
+
+### Complete example:
+
 ```yaml
 ---
 group_id: devops # groups name string, does not work with personal accounts

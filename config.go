@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -22,12 +24,16 @@ type Config struct {
 }
 
 func ConfigFromFile(file string) (*Config, error) {
-	viper.SetConfigFile(file)
+	config, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, fmt.Errorf("Can't read config file: %w", err)
+	}
+
+	viper.SetConfigType("yaml")
 	viper.SetEnvPrefix("gitlab")
 
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("Can't read config:", err)
-		os.Exit(1)
+	if err := viper.ReadConfig(bytes.NewBufferString(os.ExpandEnv(string(config)))); err != nil {
+		return nil, fmt.Errorf("Can't parse config: %w", err)
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
