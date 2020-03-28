@@ -20,6 +20,11 @@ func (c *Client) UpdateGroup(id int, settings map[string]interface{}) error {
 		return err
 	}
 
+	err = c.UpdateGroupVariables(id, settings)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -93,6 +98,17 @@ func (c *Client) UpdateGroupMembers(id int, settings map[string]interface{}) err
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+func (c *Client) UpdateGroupVariables(id int, settings map[string]interface{}) error {
+	if v, ok := settings["variables"]; ok {
+		err := c.UpdateVariables("groups", id, v)
+		if err != nil {
+			return err
 		}
 	}
 

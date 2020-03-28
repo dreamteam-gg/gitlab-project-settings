@@ -66,6 +66,12 @@ only_projects:
 group_settings:
   members:
     some_user_name: Maintainer # Guest, Reporter,Developer, Maintainer, Owner
+  variables: # ref https://docs.gitlab.com/ee/api/group_level_variables.html#create-variable
+    - key: SECRET_VAR
+      value: ${SECRET_VAR_FROM_ENV}
+      variable_type: env_var # or file
+      protected: true
+      masked: true # if set to masked, variable value will be redacted from output
 
 # mask diff for any fields containing this words
 mask:
@@ -130,6 +136,13 @@ project_settings:
       cron: 0 1 * * *
       cron_timezone: UTC
       active: true
+  variables: # ref https://docs.gitlab.com/ee/api/project_level_variables.html#create-variable
+    - key: SECRET_VAR
+      value: ${SECRET_VAR_FROM_ENV}
+      variable_type: env_var # or file
+      protected: true
+      masked: true
+      environment_scope: "prod"
 
 
 # override settings per project

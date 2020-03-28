@@ -115,6 +115,11 @@ func (c *Client) UpdateProject(project *Project, settings map[string]interface{}
 		return err
 	}
 
+	err = c.UpdateProjectVariables(id, settings)
+	if err != nil {
+		return err
+	}
+
 	fmt.Println("ok")
 	return nil
 }
@@ -402,8 +407,6 @@ func (c *Client) UpdateProjectPipelineSchedules(project *Project, settings map[s
 			fmt.Println(diff)
 		}
 
-		fmt.Println()
-
 		if !*flagDryRun && schedId == 0 {
 			if !*flagDryRun {
 				_, err = c.doFormRequest(http.MethodPost, fmt.Sprintf("projects/%d/pipeline_schedules", id), schedule)
@@ -420,6 +423,17 @@ func (c *Client) UpdateProjectPipelineSchedules(project *Project, settings map[s
 			}
 		}
 
+	}
+
+	return nil
+}
+
+func (c *Client) UpdateProjectVariables(id int, settings map[string]interface{}) error {
+	if v, ok := settings["variables"]; ok {
+		err := c.UpdateVariables("projects", id, v)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
