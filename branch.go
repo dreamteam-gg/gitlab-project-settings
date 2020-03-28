@@ -70,7 +70,7 @@ func (c *Client) UnmarshallAllowed(a interface{}) ([]map[string]interface{}, err
 		return nil, nil
 	}
 	for _, m := range a.([]interface{}) {
-		for k, v := range InterfaceMapToMap(m.(map[interface{}]interface{})) {
+		for k, v := range InterfaceMapToStringMap(m.(map[interface{}]interface{})) {
 			var i int
 			var err error
 			switch k {
@@ -92,14 +92,6 @@ func (c *Client) UnmarshallAllowed(a interface{}) ([]map[string]interface{}, err
 	}
 
 	return allowed, nil
-}
-
-func InterfaceMapToMap(i map[interface{}]interface{}) map[string]string {
-	m := make(map[string]string)
-	for k, v := range i {
-		m[k.(string)] = v.(string)
-	}
-	return m
 }
 
 func FindBranchInList(name string, branches []map[string]interface{}) map[string]interface{} {

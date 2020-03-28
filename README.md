@@ -124,6 +124,13 @@ project_settings:
   deploy_keys:
     - deploy-key-title
     - second-deploy-key
+  pipeline_schedules: # ref https://docs.gitlab.com/ee/api/pipeline_schedules.html#create-a-new-pipeline-schedule
+    - description: Nightly test run # description must be unique
+      ref: master
+      cron: 0 1 * * *
+      cron_timezone: UTC
+      active: true
+
 
 # override settings per project
 overrides:
