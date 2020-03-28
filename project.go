@@ -105,6 +105,11 @@ func (c *Client) UpdateProject(project *Project, settings map[string]interface{}
 		return err
 	}
 
+	err = c.UpdateProjectPushRule(project, settings)
+	if err != nil {
+		return err
+	}
+
 	fmt.Println("ok")
 	return nil
 }
@@ -158,6 +163,41 @@ func (c *Client) UpdateProjectApprovals(project *Project, settings map[string]in
 
 	if !*flagDryRun && !equal && len(approversSettings) > 0 {
 		_, err := c.doFormRequest(http.MethodPut, fmt.Sprintf("projects/%d/approvers", int(id)), approvalIds)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ref https://docs.gitlab.com/ee/api/projects.html#edit-project-push-rule
+func (c *Client) UpdateProjectPushRule(project *Project, settings map[string]interface{}) error {
+	id := int(project.Get("id").(float64))
+
+	var pushRuleSettings map[string]interface{}
+	if v, ok := settings["push_rule"]; ok {
+		pushRuleSettings = v.(map[string]interface{})
+	}
+
+	existingPushRule, err := c.GetProjectPushRule(project)
+	if err != nil {
+		return err
+	}
+
+	diff, _, _, equal := computeDiff(existingPushRule, pushRuleSettings)
+	if !equal && len(pushRuleSettings) > 0 {
+		fmt.Println("\t Updating push rule")
+		fmt.Println(diff)
+	}
+	if !*flagDryRun && !equal && len(pushRuleSettings) > 0 {
+		var method string
+		if existingPushRule == nil {
+			method = http.MethodPost
+		} else {
+			method = http.MethodPut
+		}
+		_, err := c.doFormRequest(method, fmt.Sprintf("projects/%d/push_rule", int(id)), pushRuleSettings)
 		if err != nil {
 			return err
 		}
@@ -430,6 +470,31 @@ func (c *Client) ConvertApprovalIdsToNames(settings map[string]interface{}) (map
 	converted["approver_ids"] = users
 
 	return converted, nil
+}
+
+func (c *Client) GetProjectPushRule(project *Project) (map[string]interface{}, error) {
+	var pushRule map[string]interface{}
+	id := int(project.Get("id").(float64))
+
+	resp, err := c.doRequest(http.MethodGet, fmt.Sprintf("projects/%v/push_rule", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return nil, fmt.Errorf("Error getting push rule settings. Return code not 2XX: %s", resp.Status)
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal(b, &pushRule); err != nil {
+		return nil, err
+	}
+
+	return pushRule, nil
 }
 
 func (c *Client) GetProjectProtectedBranches(project *Project) ([]map[string]interface{}, error) {
