@@ -83,3 +83,19 @@ func (c *Client) doFormRequest(method, path string, values map[string]interface{
 
 	return r, nil
 }
+
+func InterfaceMapToStringMap(i map[interface{}]interface{}) map[string]string {
+	m := make(map[string]string)
+	for k, v := range i {
+		m[k.(string)] = v.(string)
+	}
+	return m
+}
+
+func InterfaceMapToInterfaceMap(i map[interface{}]interface{}) map[string]interface{} {
+	m := make(map[string]interface{})
+	for k, v := range i {
+		m[k.(string)] = v
+	}
+	return m
+}

@@ -110,6 +110,11 @@ func (c *Client) UpdateProject(project *Project, settings map[string]interface{}
 		return err
 	}
 
+	err = c.UpdateProjectPipelineSchedules(project, settings)
+	if err != nil {
+		return err
+	}
+
 	fmt.Println("ok")
 	return nil
 }
@@ -310,7 +315,7 @@ func (c *Client) UpdateProjectWebHooks(project *Project, settings map[string]int
 
 		h.(map[string]interface{})["url"] = u
 
-		if !*flagDryRun && id == 0 {
+		if !*flagDryRun && hookId == 0 {
 			// create hook if it does not exist
 			if !*flagDryRun {
 				_, err = c.doFormRequest(http.MethodPost, fmt.Sprintf("projects/%d/hooks", id), h.(map[string]interface{}))
@@ -369,6 +374,52 @@ func (c *Client) UpdateProjectDeployKeys(project *Project, settings map[string]i
 				return err
 			}
 		}
+	}
+
+	return nil
+}
+
+func (c *Client) UpdateProjectPipelineSchedules(project *Project, settings map[string]interface{}) error {
+	id := int(project.Get("id").(float64))
+
+	var schedules []interface{}
+	if v, ok := settings["pipeline_schedules"]; ok {
+		schedules = v.([]interface{})
+	} else {
+		return nil
+	}
+
+	for _, s := range schedules {
+		schedule := InterfaceMapToInterfaceMap(s.(map[interface{}]interface{}))
+		schedId, existingSettings, err := c.GetProjectPipelineSchedule(project, schedule["description"].(string))
+		if err != nil {
+			return err
+		}
+
+		diff, _, _, equal := computeDiff(existingSettings, schedule)
+		if !equal {
+			fmt.Printf("\t Updating pipeline schedule '%s'\n", schedule["description"].(string))
+			fmt.Println(diff)
+		}
+
+		fmt.Println()
+
+		if !*flagDryRun && schedId == 0 {
+			if !*flagDryRun {
+				_, err = c.doFormRequest(http.MethodPost, fmt.Sprintf("projects/%d/pipeline_schedules", id), schedule)
+				if err != nil {
+					return fmt.Errorf("error creating pipeline schedule: %v", err)
+				}
+			}
+		} else if !*flagDryRun && !equal {
+			if !*flagDryRun {
+				_, err = c.doFormRequest(http.MethodPut, fmt.Sprintf("projects/%d/pipeline_schedules/%d", id, schedId), schedule)
+				if err != nil {
+					return fmt.Errorf("error updating pipeline schedule: %v", err)
+				}
+			}
+		}
+
 	}
 
 	return nil
@@ -668,6 +719,37 @@ func (c *Client) GetProjectWebHook(project *Project, url string) (int, map[strin
 	for _, h := range hooks {
 		if h["url"].(string) == url {
 			return int(h["id"].(float64)), h, nil
+		}
+	}
+
+	return 0, nil, nil
+}
+
+func (c *Client) GetProjectPipelineSchedule(project *Project, url string) (int, map[string]interface{}, error) {
+	id := int(project.Get("id").(float64))
+
+	resp, err := c.doRequest(http.MethodGet, fmt.Sprintf("projects/%d/pipeline_schedules", id), nil)
+	if err != nil {
+		return 0, nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return 0, nil, fmt.Errorf("Error getting project %d pipeline schedules. Return code not 2XX: %s", id, resp.Status)
+	}
+
+	r, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	schedules := []map[string]interface{}{}
+	if err := json.Unmarshal(r, &schedules); err != nil {
+		return 0, nil, err
+	}
+
+	for _, s := range schedules {
+		if s["description"].(string) == url {
+			return int(s["id"].(float64)), s, nil
 		}
 	}
 
