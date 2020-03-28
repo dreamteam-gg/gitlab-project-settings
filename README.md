@@ -90,6 +90,9 @@ project_settings:
   approvers: # ref https://docs.gitlab.com/ee/api/merge_request_approvals.html#change-allowed-approvers
     approver_ids: []
     approver_group_ids: ["devops"] # group name as string
+  push_rule: # ref https://docs.gitlab.com/ee/api/projects.html#add-project-push-rule
+    branch_name_regex: 'JIRA-*'
+    reject_unsigned_commits: true
   protected_branches: # ref https://docs.gitlab.com/ee/api/protected_branches.html#protect-repository-branches
     master:
       push_access_level: NoAccess # NoAccess, Developer, Maintainer, Admin
